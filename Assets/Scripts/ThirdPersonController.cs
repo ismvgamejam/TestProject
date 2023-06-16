@@ -79,6 +79,8 @@ namespace StarterAssets
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
 
+        private bool isGathering = false;
+
         // player
         private float _speed;
         private float _animationBlend;
@@ -97,6 +99,7 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private bool _isRunning;
 
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
         private PlayerInput _playerInput;
@@ -159,6 +162,13 @@ namespace StarterAssets
             JumpAndGravity();
             GroundedCheck();
             Move();
+            GatherQuestItem();
+
+            if (isGathering && !_animator.GetCurrentAnimatorStateInfo(0).IsName("TakeFlowers"))
+            {
+                _animator.SetBool("isGathering", false);
+                isGathering = false;
+            }
         }
 
         private void LateUpdate()
@@ -274,8 +284,14 @@ namespace StarterAssets
             // update animator if using character
             if (_hasAnimator)
             {
+                if (_speed > 0.0f)
+                    _animator.SetBool("isRunning", true);
+                else
+                    _animator.SetBool("isRunning", false);
+
                 _animator.SetFloat(_animIDSpeed, _animationBlend);
                 _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+
             }
         }
 
@@ -345,6 +361,21 @@ namespace StarterAssets
             if (_verticalVelocity < _terminalVelocity)
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
+            }
+        }
+
+        private void GatherQuestItem()
+        {
+            if (Input.GetKeyDown(KeyCode.E) && QuestSystem.Instance.HasQuest())
+            {
+                if (_hasAnimator)
+                {
+                    if (!isGathering) // Check if the gathering animation is not already playing
+                    {
+                        _animator.SetBool("isGathering", true);
+                        isGathering = true;
+                    }
+                }
             }
         }
 
